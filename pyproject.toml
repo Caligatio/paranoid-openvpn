@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "paranoid-openvpn"
+version = "0.1.0"
+description = "Hardening script for OpenVPN client profiles"
+authors = ["Brian Turek <brian.turek@gmail.com>"]
+license = "MIT"
+homepage = "https://github.com/Caligatio/paranoid-openvpn"
+repository = "https://github.com/Caligatio/paranoid-openvpn"
+
+[tool.poetry.dependencies]
+python = "^3.6.1"
+typing-extensions = { version = "^3.7.4.3", python = "<3.8" }
+
+[tool.poetry.dev-dependencies]
+black = "^20.8b1"
+pre-commit = "^2.11.1"
+mypy = "^0.812"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+paranoid_openvpn = 'paranoid_openvpn.cli:cli'
+
+[tool.black]
+line-length = 120
