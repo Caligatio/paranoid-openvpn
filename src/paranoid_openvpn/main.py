@@ -1,72 +1,46 @@
 import logging
 import shutil
-import sys
 from pathlib import Path
-from typing import Dict, Optional
 
-from .types import TLSVersion
-
-if sys.version_info >= (3, 8):
-    from typing import Final
-else:
-    from typing_extensions import Final
+from .profile_parser import BlankLine, Comment, OVPNConfig, Parameter
+from .types import CipherStrength, TLSVersion
 
 logger = logging.getLogger(__name__)
 
 
 def process_profile(src: Path, dest: Path, min_tls: TLSVersion) -> None:
-    security_settings: Final = {
-        "tls-cipher": "TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384:TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256:TLS-ECDHE-ECDSA-WITH-AES-256-CBC-SHA384",  # noqa: E501
-        "tls-groups": "secp521r1:X448:secp384r1:secp256r1:X25519",
-        "tls-ciphersuites": "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256",
-        "tls-version-min": "{} or-highest".format(min_tls.value),
-        "tls-version-max": "1.3",
-    }
+    config = OVPNConfig.read(src)
+    cipher_strength = config.cipher_strength()
 
-    with src.open("r") as f_in, dest.open("w") as f_out:
-        lines = f_in.readlines()
-        num_lines = len(lines)
-        insert_points: Dict[str, Optional[int]] = {
-            "tls-version-min": None,
-            "tls-version-max": None,
-            "tls-cipher": None,
-            "tls-ciphersuites": None,
-            "tls-groups": None,
+    if cipher_strength in [CipherStrength.STRONG, CipherStrength.MEDIUM]:
+        security_settings = {
+            "tls-cipher": "TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384:TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256:TLS-ECDHE-ECDSA-WITH-AES-256-CBC-SHA384",  # noqa: E501
+            "tls-groups": "secp521r1:X448:secp384r1:secp256r1:X25519",
+            "tls-ciphersuites": "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256",
+            "tls-version-min": "{} or-highest".format(min_tls.value),
         }
-        block_points = {
-            "<crl-verify>": num_lines,
-            "<cert>": num_lines,
-            "<ca>": num_lines,
-            "<key>": num_lines,
-            "<tls-auth>": num_lines,
-            "<dh>": num_lines,
-            "<extra-certs>": num_lines,
-            "<pkcs12>": num_lines,
-            "<secret>": num_lines,
-            "<tls-crypt>": num_lines,
-            "<htt-proxy-user-pass>": num_lines,
+    else:
+        security_settings = {
+            "tls-cipher": "TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256:TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256:TLS-ECDHE-ECDSA-WITH-AES-128-CBC-SHA256",  # noqa: E501
+            "tls-groups": "secp256r1:X25519",
+            "tls-ciphersuites": "TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256",
+            "tls-version-min": "{} or-highest".format(min_tls.value),
         }
 
-        for line_num, line in enumerate(lines):
-            for key in insert_points:
-                if line.startswith(key):
-                    insert_points[key] = line_num
-                    break
-            for key in block_points:
-                if line.startswith(key):
-                    block_points[key] = line_num
-                    break
+    config.insert(config.last_before_inline(), BlankLine())
+    config.insert(config.last_before_inline(), Comment("# Begin Paranoid OpenVPN changes"))
+    for param, value in security_settings.items():
+        try:
+            del config[param]
+        except KeyError:
+            pass
 
-        last_nonblock = min(block_points.values())
+        config.insert(config.last_before_inline(), Parameter(param, value))
 
-        for param in ("tls-groups", "tls-cipher", "tls-ciphersuites", "tls-version-max", "tls-version-min"):
-            insert_point = insert_points[param]
-            if insert_point is not None:
-                lines[insert_point] = "{} {}\n".format(param, security_settings[param])
-            else:
-                lines.insert(last_nonblock, "{} {}\n".format(param, security_settings[param]))
+    config.insert(config.last_before_inline(), Comment("# End Paranoid OpenVPN changes"))
+    config.insert(config.last_before_inline(), BlankLine())
 
-        f_out.writelines(lines)
+    config.write(dest)
 
 
 def process_profiles(src: Path, dest: Path, min_tls: TLSVersion) -> None:
