@@ -6,6 +6,7 @@ authors = ["Brian Turek <brian.turek@gmail.com>"]
 license = "MIT"
 homepage = "https://github.com/Caligatio/paranoid-openvpn"
 repository = "https://github.com/Caligatio/paranoid-openvpn"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
