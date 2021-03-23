@@ -76,6 +76,9 @@ def process_profile(src: Path, dest: Path, min_tls: TLSVersion, provider_ext: Pr
 
     config.write(dest)
 
+    if cipher_strength == CipherStrength.WEAK:
+        logger.warning("%s has WEAK cipher strength!", dest)
+
 
 def process_profiles(src: Path, dest: Path, min_tls: TLSVersion, provider_ext: ProviderExtensions) -> None:
     """Completely processes one or more OVPN profiles.
