@@ -24,7 +24,7 @@ def process_pia(config: OVPNConfig) -> None:
         config.insert(cipher_loc, Parameter("cipher", "AES-256-GCM"))
     else:
         config.insert(cipher_loc, Parameter("ncp-disable"))
-        config.insert(cipher_loc, Parameter("data-ciphers", "AES-128-GCM:AES-128-CBC:CHACHA20-POLY1305"))
+        config.insert(cipher_loc, Parameter("data-ciphers", "AES-128-GCM:CHACHA20-POLY1305:AES-128-CBC"))
         config.insert(cipher_loc, Parameter("cipher", "AES-128-GCM"))
 
 
