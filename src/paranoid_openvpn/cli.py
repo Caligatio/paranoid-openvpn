@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .input_handlers import ResolveSource
 from .main import process_profiles
-from .types import TLSVersion
+from .types import ProviderExtensions, TLSVersion
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +20,8 @@ def cli() -> None:
     parser.add_argument(
         "--logging", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], help="Desired log level"
     )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--pia", default=False, action="store_true", help="Add Private Internet Access fixes/hardening")
 
     args = parser.parse_args()
 
@@ -27,9 +29,14 @@ def cli() -> None:
         level=getattr(logging, args.logging), format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
+    if args.pia:
+        provider_extensions = ProviderExtensions.PIA
+    else:
+        provider_extensions = ProviderExtensions.NONE
+
     try:
         with ResolveSource(args.source) as src:
-            process_profiles(src, args.dest, TLSVersion(args.min_tls))
+            process_profiles(src, args.dest, TLSVersion(args.min_tls), provider_extensions)
             sys.exit(0)
     except Exception as exc:
         logging.critical("Failed processing source", exc_info=exc)

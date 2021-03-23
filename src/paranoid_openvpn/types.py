@@ -15,3 +15,9 @@ class CipherStrength(Enum):
     ACCEPTABLE = auto()
     MEDIUM = auto()
     STRONG = auto()
+
+
+@unique
+class ProviderExtensions(Enum):
+    NONE = auto()
+    PIA = auto()
