@@ -60,8 +60,16 @@ benefit from a few tweaks.
 
 PIA's provided OpenVPN profiles seemingly only support AES-128-CBC and
 AES-256-CBC as the `cipher` option.  However with a little coaxing, PIA will
-connect using AES-256-GCM and AES-128-GCM. Using the `--pia` flag will allow
+connect using AES-256-GCM and AES-128-GCM. Use the `--pia` flag to allow
 your client to client with these AEAD ciphers.
+
+## Donations
+
+If you use this project and feel it's worth a donation, check out
+[GitHub Sponsors](ghs) or [Buy Me a Coffee](bmac).
+
+[ghs]: https://github.com/sponsors/Caligatio
+[bmac]: https://www.buymeacoffee.com/caligatio
 
 ## Credit
 
