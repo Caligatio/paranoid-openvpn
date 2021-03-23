@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def cli() -> None:
+    """Main command-line entry point into the program. Parses options and invokes the rest of the program."""
     parser = argparse.ArgumentParser(description="Harden OpenVPN profiles from popular providers")
     parser.add_argument("source", help="Path or HTTP to zip file containing original OpenVPN profiles")
     parser.add_argument("dest", type=Path, help="Path to output file or directory")

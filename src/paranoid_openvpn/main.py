@@ -9,6 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 def process_pia(config: OVPNConfig) -> None:
+    """Adds necessary options to force AES-GCM connections to Private Internet Access.
+
+    :param config: The already hardened OVPN profile
+    """
     cipher_strength = config.cipher_strength()
 
     cipher_loc = config.index("cipher")
@@ -29,6 +33,13 @@ def process_pia(config: OVPNConfig) -> None:
 
 
 def process_profile(src: Path, dest: Path, min_tls: TLSVersion, provider_ext: ProviderExtensions) -> None:
+    """Completely processes one OVPN profile.
+
+    :param src: Path to local input file.
+    :param dest: Path to the desired output file.
+    :param min_tls: Minimum TLS version to require.
+    :param provider_ext: Flag to indicate which, if any, provider specific tweaks to apply.
+    """
     config = OVPNConfig.read(src)
     cipher_strength = config.cipher_strength()
 
@@ -67,6 +78,13 @@ def process_profile(src: Path, dest: Path, min_tls: TLSVersion, provider_ext: Pr
 
 
 def process_profiles(src: Path, dest: Path, min_tls: TLSVersion, provider_ext: ProviderExtensions) -> None:
+    """Completely processes one or more OVPN profiles.
+
+    :param src: Path to local input file or directory containing OVPN profile(s).
+    :param dest: Path to the output file (if `src` was a file) or directory (if `src`) was a directory.
+    :param min_tls: Minimum TLS version to require.
+    :param provider_ext: Flag to indicate which, if any, provider specific tweaks to apply.
+    """
     if src.is_file():
         dest.parent.mkdir(parents=True, exist_ok=True)
         process_profile(src, dest, min_tls, provider_ext)

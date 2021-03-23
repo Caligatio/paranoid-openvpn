@@ -3,6 +3,8 @@ from enum import Enum, auto, unique
 
 @unique
 class TLSVersion(Enum):
+    """Enum for desired minimum TLS version to require."""
+
     v1_0 = "1.0"
     v1_1 = "1.1"
     v1_2 = "1.2"
@@ -11,6 +13,8 @@ class TLSVersion(Enum):
 
 @unique
 class CipherStrength(Enum):
+    """Enum to denote the relative cipher strength level of a OVPN profile."""
+
     WEAK = auto()
     ACCEPTABLE = auto()
     MEDIUM = auto()
@@ -19,5 +23,7 @@ class CipherStrength(Enum):
 
 @unique
 class ProviderExtensions(Enum):
+    """Enum for which, if any, provider-specific customization to perform."""
+
     NONE = auto()
     PIA = auto()

@@ -23,7 +23,13 @@ CHUNK_SIZE: Final = 8192
 
 
 class HandleZip:
+    """Context manager that transparently extracts ZIP files to a temporary location."""
+
     def __init__(self, src: Path) -> None:
+        """Extracts the input ZIP file to a temporary location.
+
+        :param src: Path to the input ZIP file.
+        """
         self.temp_dir = Path(tempfile.mkdtemp())
 
         with zipfile.ZipFile(src) as f_in:
@@ -31,17 +37,29 @@ class HandleZip:
             logger.debug("Zip file extracted temporarily to %s", self.temp_dir)
 
     def __enter__(self) -> Path:
+        """Context manager __enter__ function.
+
+        :return: Resolved path to a local directory to process.
+        """
         return self.temp_dir
 
     def __exit__(
         self, exc_type: Optional[Type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
     ) -> Literal[False]:
+        """Cleans up any temporary files resulting from the ZIP extraction."""
         shutil.rmtree(self.temp_dir)
         return False
 
 
 class HandleDownload:
+    """Context manager that transparently downloads remote files to a temporary location."""
+
     def __init__(self, url: str) -> None:
+        """Downloads the resource given by `url`.
+
+        :param url: URL to download.
+        :raises ValueError: Raised for non-HTTP(S) URLs and if the download fails.
+        """
         if not (url.startswith("http://") or url.startswith("https://")):
             raise ValueError("Can only download files via HTTP")
 
@@ -71,17 +89,28 @@ class HandleDownload:
             raise
 
     def __enter__(self) -> Path:
+        """Context manager __enter__ function.
+
+        :return: Resolved path to a local file to process or extract.
+        """
         return self.temp_file
 
     def __exit__(
         self, exc_type: Optional[Type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
     ) -> Literal[False]:
+        """Cleans up any temporary files resulting from the download."""
         self.temp_file.unlink()
         return False
 
 
 class ResolveSource:
+    """Context manager that handles all the different input sources and provides a path to a local file/directory."""
+
     def __init__(self, src: str) -> None:
+        """Performs the needed combination of downloading/extracting source files.
+
+        :param src: HTTP(S) URL or local path to the OVPN profiles to process.
+        """
         self.exit_stack = ExitStack()
 
         self.path = Path(src)
@@ -98,10 +127,15 @@ class ResolveSource:
             pass
 
     def __enter__(self) -> Path:
+        """Context manager __enter__ function.
+
+        :return: Resolved path to either a local file or directory containing OVPN profile(s).
+        """
         return self.path
 
     def __exit__(
         self, exc_type: Optional[Type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
     ) -> Literal[False]:
+        """Cleans up all the temporary files created by calling child context managers."""
         self.exit_stack.close()
         return False
