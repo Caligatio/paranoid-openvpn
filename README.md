@@ -40,7 +40,7 @@ control channel to match these protection levels, with an absolute minimum of
 
 Where cryptographic judgement calls needed to be made, these rules were followed:
 
-  * [AEAD ciphers][1] are always preferred over non-AEAD ciphers
+  * [AEAD ciphers][aead] are always preferred over non-AEAD ciphers
   * At the 256-bit security level, AES-GCM was preferred over CHACHA20-POLY1305
     (for no particular reason).
   * The 192-bit security level is rounded up to 256-bit as there are no 192-bit
