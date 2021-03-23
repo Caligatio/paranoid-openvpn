@@ -40,7 +40,7 @@ control channel to match these protection levels, with an absolute minimum of
 
 Where cryptographic judgement calls needed to be made, these rules were followed:
 
-  * [AEAD ciphers](1) are always preferred over non-AEAD ciphers
+  * [AEAD ciphers][1] are always preferred over non-AEAD ciphers
   * At the 256-bit security level, AES-GCM was preferred over CHACHA20-POLY1305
     (for no particular reason).
   * The 192-bit security level is rounded up to 256-bit as there are no 192-bit
@@ -49,7 +49,7 @@ Where cryptographic judgement calls needed to be made, these rules were followed
     for AES-128-GCM instead AES-128-CBC because it is an AEAD cipher.
     AES-128-CBC is then the fallback for CHACHA20-POLY1305.
 
-[1]: https://en.wikipedia.org/wiki/Authenticated_encryption
+[aead]: https://en.wikipedia.org/wiki/Authenticated_encryption
 
 ## Provider-specific Fixes
 
@@ -66,7 +66,7 @@ your client to client with these AEAD ciphers.
 ## Donations
 
 If you use this project and feel it's worth a donation, check out
-[GitHub Sponsors](ghs) or [Buy Me a Coffee](bmac).
+[GitHub Sponsors][ghs] or [Buy Me a Coffee][bmac].
 
 [ghs]: https://github.com/sponsors/Caligatio
 [bmac]: https://www.buymeacoffee.com/caligatio
