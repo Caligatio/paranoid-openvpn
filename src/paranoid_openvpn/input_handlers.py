@@ -118,13 +118,14 @@ class ResolveSource:
             logger.debug("Determined source was remote file, downloading")
             self.path = self.exit_stack.enter_context(HandleDownload(src))
 
-        try:
-            zip_file = zipfile.ZipFile(self.path)
-            zip_file.close()
-            self.path = self.exit_stack.enter_context(HandleZip(self.path))
-        except zipfile.BadZipFile:
-            # Make an assumption that our thing is either a directory or a file
-            pass
+        if self.path.is_file():
+            try:
+                zip_file = zipfile.ZipFile(self.path)
+                zip_file.close()
+                self.path = self.exit_stack.enter_context(HandleZip(self.path))
+            except zipfile.BadZipFile:
+                # Make an assumption that our thing is a non-zip file
+                pass
 
     def __enter__(self) -> Path:
         """Context manager __enter__ function.
