@@ -1,31 +1,9 @@
-import sys
+import re
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List, Optional, Sequence, TextIO, Union
 
 from .types import CipherStrength
-
-if sys.version_info >= (3, 8):
-    from typing import Final
-else:
-    from typing_extensions import Final
-
-
-INLINE_TAGS: Final = set(
-    [
-        "<crl-verify>",
-        "<cert>",
-        "<ca>",
-        "<key>",
-        "<tls-auth>",
-        "<dh>",
-        "<extra-certs>",
-        "<pkcs12>",
-        "<secret>",
-        "<tls-crypt>",
-        "<http-proxy-user-pass>",
-    ]
-)
 
 
 class OVPNConfigParam(ABC):
@@ -181,11 +159,12 @@ class Inline(OVPNConfigParam):
         """
         line = config[0].strip()
 
-        if line not in INLINE_TAGS:
+        tag_match = re.match(r"<([a-z0-9][a-z\-\_0-9]*[a-z0-9])>", line)
+        if not tag_match:
             raise ValueError(f"{line} is not a recognized inline tag")
 
-        param = line
-        stripped_param = line[1:-1]
+        param = tag_match.group(0)
+        stripped_param = tag_match.group(1)
         value = []
 
         for line in config[1:]:
@@ -243,6 +222,10 @@ class Parameter(OVPNConfigParam):
         :return: Instance of this class initialized with the contents of the parameter
         """
         line = config[0].strip()
+
+        if not re.match(r"[a-z0-9][a-z\-\_0-9]*[a-z0-9]", line):
+            raise ValueError(f"Line is not a parameter: {line}")
+
         try:
             param, value = line.split(" ", maxsplit=1)
             return Parameter(param, value)
@@ -433,7 +416,7 @@ class OVPNConfig:
         :return: The last line before inline elements start
         """
         try:
-            return min([i for i, param in enumerate(self.params) if param.name and param.name in INLINE_TAGS])
+            return min([i for i, param in enumerate(self.params) if isinstance(param, Inline)])
         except ValueError:
             return len(self.params)
 
