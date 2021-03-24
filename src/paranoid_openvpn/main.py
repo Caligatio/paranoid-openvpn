@@ -92,6 +92,10 @@ def process_profiles(src: Path, dest: Path, min_tls: TLSVersion, provider_ext: P
         dest.parent.mkdir(parents=True, exist_ok=True)
         process_profile(src, dest, min_tls, provider_ext)
     else:
+        # If dest is relative to src, rglob will cause this script to infinitely reprocess its own output
+        if dest.is_relative_to(src):
+            raise ValueError("dest path cannot be relative to src path")
+
         for child in src.rglob("*.*"):
             dest_file = dest / child.relative_to(src)
             dest_file.parent.mkdir(parents=True, exist_ok=True)
