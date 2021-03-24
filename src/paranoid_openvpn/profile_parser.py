@@ -23,7 +23,7 @@ INLINE_TAGS: Final = set(
         "<pkcs12>",
         "<secret>",
         "<tls-crypt>",
-        "<htt-proxy-user-pass>",
+        "<http-proxy-user-pass>",
     ]
 )
 
