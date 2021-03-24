@@ -58,7 +58,7 @@ class BlankLine(OVPNConfigParam):
         :return: Instance of this class initialized with the head of `config`
         """
         if config[0].strip() != "":
-            raise ValueError("Empty is not empty")
+            raise ValueError("Line is not empty")
 
         return BlankLine()
 
@@ -161,7 +161,7 @@ class Inline(OVPNConfigParam):
 
         tag_match = re.match(r"<([a-z0-9][a-z\-\_0-9]*[a-z0-9])>", line)
         if not tag_match:
-            raise ValueError(f"{line} is not a recognized inline tag")
+            raise ValueError(f"Line is not an inline tag: {line}")
 
         param = tag_match.group(0)
         stripped_param = tag_match.group(1)
