@@ -1,7 +1,7 @@
 import re
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Optional, Sequence, TextIO, Union
+from typing import Iterable, Optional, Sequence, TextIO, Union
 
 from .types import CipherStrength
 
@@ -24,6 +24,13 @@ class OVPNConfigParam(ABC):
     def __len__(self) -> int:
         """Abstract method to require children to implement support for the len() function."""
         pass
+
+    def __eq__(self, other: object) -> bool:
+        """Returns whether this object and another `OVPNConfigParam` are equal."""
+        if not isinstance(other, OVPNConfigParam):
+            return NotImplemented
+
+        return self.name == other.name and self.value == other.value
 
     @property
     @abstractmethod
@@ -85,7 +92,7 @@ class Comment(OVPNConfigParam):
 
         :param comment: The content of the comment, prefixed with the comment character.
         """
-        self.comment = comment
+        self.comment = comment.strip()
 
     def write(self, f_out: TextIO) -> int:
         """Writes the contents of the comment to the output OVPN profile.
@@ -103,11 +110,10 @@ class Comment(OVPNConfigParam):
         :raises valueerror: raised if the first config line doesn't start with a comment character
         :return: Instance of this class initialized with the head of `config`
         """
-        line = config[0].strip()
-        if not (line.startswith("#") or line.startswith(";")):
+        if not (config[0].startswith("#") or config[0].startswith(";")):
             raise ValueError("Line does not start with a comment character")
 
-        return Comment(line)
+        return Comment(config[0])
 
     def __len__(self) -> int:
         """Returns the number of lines this element takes up."""
@@ -133,8 +139,8 @@ class Inline(OVPNConfigParam):
         :param param: The name of the inline parameter, including <>s
         :param value: Sequence of strings that make up the inline value
         """
-        self._name = param
-        self._value = value
+        self._name = param.strip()
+        self._value = [item.strip() for item in value]
 
     def write(self, f_out: TextIO) -> int:
         """Writes the contents of the inline element to the output OVPN profile.
@@ -168,9 +174,9 @@ class Inline(OVPNConfigParam):
         value = []
 
         for line in config[1:]:
-            if line.strip() == f"</{stripped_param}>":
+            if line.startswith(f"</{stripped_param}>"):
                 break
-            value.append(line.strip())
+            value.append(line)
         else:
             raise ValueError("Tag was never closed")
 
@@ -200,8 +206,8 @@ class Parameter(OVPNConfigParam):
         :param param: Name of the parameter
         :param value: Value of the parameter, can be None for some parameters
         """
-        self._name = param
-        self._value = value
+        self._name = param.strip()
+        self._value = value.strip() if value else None
 
     def write(self, f_out: TextIO) -> int:
         """Writes the contents of the parammeter to the output OVPN profile.
@@ -250,9 +256,9 @@ class Parameter(OVPNConfigParam):
 class OVPNConfig:
     """Class that represents an entire OVPN profile."""
 
-    def __init__(self) -> None:
+    def __init__(self, params: Optional[Iterable[OVPNConfigParam]] = None) -> None:
         """Constructor."""
-        self.params: List[OVPNConfigParam] = []
+        self.params = list(params) if params else []
 
     @classmethod
     def read(cls, config_file: Path) -> "OVPNConfig":
@@ -292,7 +298,7 @@ class OVPNConfig:
         :param exist_ok: Whether it is OK if the parameter already exists in the config.
         :raises KeyError: Raised if `new_param` already exists and `exist_ok` is False
         """
-        if new_param.name:
+        if not (isinstance(new_param, BlankLine) or isinstance(new_param, Comment)):
             for i, existing in enumerate(self.params):
                 if existing.name == new_param.name:
                     if exist_ok:
@@ -322,8 +328,12 @@ class OVPNConfig:
         """Magic function that implements "in"; returns whether that parameter is present in the config.
 
         :param key: The parameter name or comment contents
+        :raises TypeError: Raise if `key` is not a str
         :return: Whether the parameter is present
         """
+        if not isinstance(key, str):
+            raise TypeError("key must be a str")
+
         for param in self.params:
             if key == param.name:
                 return True
@@ -337,14 +347,14 @@ class OVPNConfig:
         was a list. If `key` is a `str`, returns the element as if this was a dictionary.
 
         :param key: The integer location or name of the desired parameter
-        :raises ValueError: Raise if `key` is not an `int` and is Falsey
+        :raises TypeError: Raise if `key` is not an `int` and is Falsey
         :raises KeyError: Raised if `key` is a `str` and that element does not exist
         :return: Specified element
         """
         if isinstance(key, int):
             return self.params[key]
         elif not key:
-            raise ValueError("Empty key not allowed")
+            raise TypeError("Empty key not allowed")
 
         for param in self.params:
             if key == param.name:
@@ -359,17 +369,19 @@ class OVPNConfig:
         If `key` is a `str`, deletes that parameter by name.
 
         :param key: The integer location or name of the desired parameter to delete
-        :raises ValueError: Raise if `key` is not an `int` and is Falsey
+        :raises TypeError: Raise if `key` is not an `int` and is Falsey
         :raises KeyError: Raised if `key` is a `str` and that element does not exist
         """
         if isinstance(key, int):
             del self.params[key]
+            return
         elif not key:
-            raise ValueError("Empty key not allowed")
+            raise TypeError("Empty key not allowed")
 
         for i, param in enumerate(self.params):
             if key == param.name:
                 del self.params[i]
+                break
         else:
             raise KeyError(f"{key} does not exist")
 
@@ -379,11 +391,12 @@ class OVPNConfig:
         :param key: The parameter name to search for
         :param start: The minimum index to start at, defaults to the start
         :param end: The maximum index to search until (exclusive), defaults to the end
-        :raises ValueError: Raised if the index is Falsey or if the `key` does not exist
+        :raises TypeError: Raised if the index is Falsey
+        :raises KeyError: Raised if the key does not exist
         :return: The index of the element, if present
         """
         if not key:
-            raise ValueError("Empty key not allowed")
+            raise TypeError("Empty key not allowed")
 
         start = start or 0
         end = end or len(self.params)
@@ -392,7 +405,7 @@ class OVPNConfig:
             if key == param.name:
                 return i
         else:
-            raise ValueError(f"{key} does not exist")
+            raise KeyError(f"{key} does not exist")
 
     def insert(self, index: int, param: OVPNConfigParam) -> None:
         """Implements behavior similar to `list.insert`.
