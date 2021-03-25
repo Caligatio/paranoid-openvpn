@@ -1,7 +1,7 @@
 # Paranoid OpenVPN
 
 Paranoid OpenVPN hardens OpenVPN profiles and provides additional optional
-provider-specific fixes (e.g. Priviate Internet Access).
+provider-specific fixes (e.g. Private Internet Access).
 
 ## Usage
 
