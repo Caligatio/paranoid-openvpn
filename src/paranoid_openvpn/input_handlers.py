@@ -8,7 +8,7 @@ import zipfile
 from contextlib import ExitStack
 from pathlib import Path
 from types import TracebackType
-from typing import Optional, Type
+from typing import Optional, Type, Union
 
 if sys.version_info >= (3, 8):
     from typing import Final, Literal
@@ -32,9 +32,13 @@ class HandleZip:
         """
         self.temp_dir = Path(tempfile.mkdtemp())
 
-        with zipfile.ZipFile(src) as f_in:
-            f_in.extractall(self.temp_dir)
-            logger.debug("Zip file extracted temporarily to %s", self.temp_dir)
+        try:
+            with zipfile.ZipFile(src) as f_in:
+                f_in.extractall(self.temp_dir)
+                logger.debug("Zip file extracted temporarily to %s", self.temp_dir)
+        except Exception:
+            shutil.rmtree(self.temp_dir)
+            raise
 
     def __enter__(self) -> Path:
         """Context manager __enter__ function.
@@ -106,26 +110,30 @@ class HandleDownload:
 class ResolveSource:
     """Context manager that handles all the different input sources and provides a path to a local file/directory."""
 
-    def __init__(self, src: str) -> None:
+    def __init__(self, src: Union[str, Path]) -> None:
         """Performs the needed combination of downloading/extracting source files.
 
         :param src: HTTP(S) URL or local path to the OVPN profiles to process.
         """
         self.exit_stack = ExitStack()
 
-        self.path = Path(src)
-        if src.startswith("http://") or src.startswith("https://"):
-            logger.debug("Determined source was remote file, downloading")
-            self.path = self.exit_stack.enter_context(HandleDownload(src))
+        if isinstance(src, str):
+            if src.startswith("http://") or src.startswith("https://"):
+                logger.debug("Determined source was remote file, downloading")
+                self.path = self.exit_stack.enter_context(HandleDownload(src))
+            else:
+                raise ValueError("src must be a HTTP(S) URL if a string")
+        else:
+            self.path = src
 
         if self.path.is_file():
             try:
-                zip_file = zipfile.ZipFile(self.path)
-                zip_file.close()
                 self.path = self.exit_stack.enter_context(HandleZip(self.path))
             except zipfile.BadZipFile:
                 # Make an assumption that our thing is a non-zip file
                 pass
+        elif not self.path.is_dir():
+            raise ValueError("Path does not exist")
 
     def __enter__(self) -> Path:
         """Context manager __enter__ function.
