@@ -18,7 +18,6 @@ pre-commit = "^2.11.1"
 mypy = "^0.812"
 pytest = "^6.2.2"
 pytest-mock = "^3.5.1"
-pytest-datafiles = "^2.0"
 pytest-cov = "^2.11.1"
 
 [build-system]
