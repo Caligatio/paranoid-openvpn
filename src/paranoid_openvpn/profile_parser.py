@@ -273,7 +273,6 @@ class OVPNConfig:
             lines = f_in.readlines()
 
         while lines:
-            # Parameter must be at the end as it has no value checking
             for parser in [BlankLine, Comment, Inline, Parameter]:
                 try:
                     # mypy does not deal with abstract class methods well, see mypy issue #6244
