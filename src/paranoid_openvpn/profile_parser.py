@@ -10,22 +10,22 @@ class OVPNConfigParam(ABC):
     """ABC that represents a single setting in an OpenVPN config. Used mostly for `typing` purposes."""
 
     @abstractmethod
-    def write(self, f_out: TextIO) -> int:
+    def write(self, f_out: TextIO) -> int:  # pragma: no cover
         """Abstract method to require children to support writing their contents to a file."""
         pass
 
     @classmethod
     @abstractmethod
-    def read(cls, config: Sequence[str]) -> "OVPNConfigParam":
+    def read(cls, config: Sequence[str]) -> "OVPNConfigParam":  # pragma: no cover
         """Abstract method to require children to implement a factory that reads from config lines."""
         pass
 
     @abstractmethod
-    def __len__(self) -> int:
+    def __len__(self) -> int:  # pragma: no cover
         """Abstract method to require children to implement support for the len() function."""
         pass
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object) -> bool:  # pragma: no cover
         """Returns whether this object and another `OVPNConfigParam` are equal."""
         if not isinstance(other, OVPNConfigParam):
             return NotImplemented
@@ -34,13 +34,13 @@ class OVPNConfigParam(ABC):
 
     @property
     @abstractmethod
-    def name(self) -> Union[str, None]:
+    def name(self) -> Union[str, None]:  # pragma: no cover
         """Abstract method to require children to expose the setting's name, if applicable."""
         pass
 
     @property
     @abstractmethod
-    def value(self) -> Union[str, None]:
+    def value(self) -> Union[str, None]:  # pragma: no cover
         """Abstract method to require children to expose the setting's value, if applicable."""
         pass
 
