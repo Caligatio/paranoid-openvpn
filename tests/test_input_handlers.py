@@ -44,7 +44,7 @@ def test_resolvesource_failure_badpath() -> None:
 
 def test_resolvesource_failure_badurn() -> None:
     """Test ResolveSource context manager when input is a bad URN."""
-    with pytest.raises(ValueError, match=r"src must be a HTTP\(S\) URL if a string"):
+    with pytest.raises(ValueError, match=r"Only HTTP\(S\) supported as remote protocol"):
         with ResolveSource("ftp://bad_host"):
             pass
 

@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -118,14 +119,15 @@ class ResolveSource:
         """
         self.exit_stack = ExitStack()
 
-        if isinstance(src, str):
-            if src.startswith("http://") or src.startswith("https://"):
+        src_as_str = str(src)
+        if re.search(r"^[a-zA-Z0-9]+://", src_as_str):
+            if src_as_str.startswith("http://") or src_as_str.startswith("https://"):
                 logger.debug("Determined source was remote file, downloading")
-                self.path = self.exit_stack.enter_context(HandleDownload(src))
+                self.path = self.exit_stack.enter_context(HandleDownload(src_as_str))
             else:
-                raise ValueError("src must be a HTTP(S) URL if a string")
+                raise ValueError("Only HTTP(S) supported as remote protocol")
         else:
-            self.path = src
+            self.path = Path(src)
 
         if self.path.is_file():
             try:
