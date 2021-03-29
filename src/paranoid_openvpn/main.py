@@ -1,5 +1,6 @@
 import logging
 import shutil
+import warnings
 from pathlib import Path
 
 from .profile_parser import BlankLine, Comment, OVPNConfig, Parameter
@@ -77,7 +78,7 @@ def process_profile(src: Path, dest: Path, min_tls: TLSVersion, provider_ext: Pr
     config.write(dest)
 
     if cipher_strength == CipherStrength.WEAK:
-        logger.warning("%s has WEAK cipher strength!", dest)
+        warnings.warn(f"{dest} has WEAK cipher strength!")
 
 
 def process_profiles(src: Path, dest: Path, min_tls: TLSVersion, provider_ext: ProviderExtensions) -> None:
