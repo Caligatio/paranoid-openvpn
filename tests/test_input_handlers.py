@@ -12,13 +12,22 @@ def test_resolvesource_local_dir(mocker: MockerFixture, tmpdir: py.path.local) -
     """Test ResolveSource context manager when input is a local directory."""
     mocked_handledownload = mocker.patch("paranoid_openvpn.input_handlers.HandleDownload")
     mocked_handlezip = mocker.patch("paranoid_openvpn.input_handlers.HandleZip")
-
     tmpdir = Path(tmpdir)
 
     with ResolveSource(tmpdir) as resolved_src:
         assert resolved_src == Path(tmpdir)
         assert not mocked_handledownload.called
         assert not mocked_handlezip.called
+
+    assert tmpdir.exists()
+
+
+def test_resolvesource_local_dir_as_str(mocker: MockerFixture, tmpdir: py.path.local) -> None:
+    """Test ResolveSource context manager when input is a local directory as a str."""
+    tmpdir = Path(tmpdir)
+
+    with ResolveSource(str(tmpdir)) as resolved_src:
+        assert resolved_src == Path(tmpdir)
 
     assert tmpdir.exists()
 
