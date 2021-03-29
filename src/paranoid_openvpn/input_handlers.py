@@ -4,6 +4,7 @@ import shutil
 import sys
 import tempfile
 import urllib.request
+import warnings
 import zipfile
 from contextlib import ExitStack
 from pathlib import Path
@@ -68,7 +69,7 @@ class HandleDownload:
             raise ValueError("Can only download files via HTTP")
 
         if url.startswith("http://"):
-            logger.warning("Downloading OpenVPN profiles over insecure connection")
+            warnings.warn("Downloading OpenVPN profiles over insecure connection")
 
         resp = urllib.request.urlopen(url)  # noqa: S310
 
