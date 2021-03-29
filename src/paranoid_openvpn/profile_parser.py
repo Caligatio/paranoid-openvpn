@@ -440,7 +440,7 @@ class OVPNConfig:
 
         :return: Enum value that describes the cipher stregnth
         """
-        cipher = self["cipher"].value
+        cipher = self["cipher"].value.upper() if self["cipher"].value else None
 
         if cipher and ("256" in cipher or "CHACHA20-POLY1305" in cipher):
             return CipherStrength.STRONG
