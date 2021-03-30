@@ -116,7 +116,7 @@ def process_profiles(src: Path, dest: Path, min_tls: TLSVersion, provider_ext: P
         config = OVPNConfig.read(src)
         process_profile(config, min_tls, provider_ext)
         config.write(dest)
-    else:
+    elif src.is_dir():
         # If dest is relative to src, rglob will cause this script to infinitely reprocess its own output
         if dest.is_relative_to(src):
             raise ValueError("dest path cannot be relative to src path")
@@ -131,3 +131,5 @@ def process_profiles(src: Path, dest: Path, min_tls: TLSVersion, provider_ext: P
                 config.write(dest_file)
             else:
                 shutil.copy(child, dest_file)
+    else:
+        raise ValueError(f"Source does not exist: {src}")
